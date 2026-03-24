@@ -1,3 +1,6 @@
+
+<img width="1226" height="898" alt="Screenshot 2026-03-24 at 10 33 46 PM" src="https://github.com/user-attachments/assets/53a40cfb-84a7-4c6b-86b3-30c2e0004bc4" />
+
 # design-system-skill
 
 A [Claude Code](https://claude.ai/code) skill that gives Claude full programmatic control over Figma — building design systems, auditing token health, migrating hardcoded values to variables, and repairing component debt — all via the Figma MCP plugin.
@@ -586,7 +589,7 @@ Padding properties only exist on Auto Layout frames. Ensure `layoutMode` is `"HO
 **Health scan says 100% on an empty page**
 An empty page has zero fills, zero text, zero instances — all coverage ratios default to 100% (0/0 = perfect). This is by design. Switch to a page with actual content before running the audit.
 
-#Results:
+# Results:
 <img width="1310" height="880" alt="Screenshot 2026-03-24 at 10 32 45 PM" src="https://github.com/user-attachments/assets/e5e5685b-1730-4ae2-a408-a6049554bf48" />
 <img width="1175" height="804" alt="Screenshot 2026-03-24 at 10 32 52 PM" src="https://github.com/user-attachments/assets/4717efc8-3cad-449c-a11f-a9109e561a60" />
 <img width="1081" height="826" alt="Screenshot 2026-03-24 at 10 33 00 PM" src="https://github.com/user-attachments/assets/8380e195-bb32-490b-acf1-855a2774a0a6" />
