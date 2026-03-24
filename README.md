@@ -1,6 +1,3 @@
-
-<img width="1226" height="898" alt="Screenshot 2026-03-24 at 10 33 46 PM" src="https://github.com/user-attachments/assets/53a40cfb-84a7-4c6b-86b3-30c2e0004bc4" />
-
 # design-system-skill
 
 A [Claude Code](https://claude.ai/code) skill that gives Claude full programmatic control over Figma — building design systems, auditing token health, migrating hardcoded values to variables, and repairing component debt — all via the Figma MCP plugin.
@@ -10,6 +7,10 @@ A [Claude Code](https://claude.ai/code) skill that gives Claude full programmati
 > **New (2026-03-24) — Figma Official Remote MCP with Write Support**
 > Figma has released an official remote MCP server that supports **write operations** — create frames, set fills, bind variables, update text, and more — directly from Claude without needing the local Console plugin or the figma-canvas-mcp bridge.
 > This is now the **preferred connection method** for all design write tasks. See [MCP Connection Options](#mcp-connection-options) below.
+
+---
+
+<img width="1226" height="898" alt="Screenshot 2026-03-24 at 10 33 46 PM" src="https://github.com/user-attachments/assets/53a40cfb-84a7-4c6b-86b3-30c2e0004bc4" />
 
 ---
 
