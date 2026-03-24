@@ -586,6 +586,23 @@ Padding properties only exist on Auto Layout frames. Ensure `layoutMode` is `"HO
 **Health scan says 100% on an empty page**
 An empty page has zero fills, zero text, zero instances — all coverage ratios default to 100% (0/0 = perfect). This is by design. Switch to a page with actual content before running the audit.
 
+#Results:
+<img width="1310" height="880" alt="Screenshot 2026-03-24 at 10 32 45 PM" src="https://github.com/user-attachments/assets/e5e5685b-1730-4ae2-a408-a6049554bf48" />
+<img width="1175" height="804" alt="Screenshot 2026-03-24 at 10 32 52 PM" src="https://github.com/user-attachments/assets/4717efc8-3cad-449c-a11f-a9109e561a60" />
+<img width="1081" height="826" alt="Screenshot 2026-03-24 at 10 33 00 PM" src="https://github.com/user-attachments/assets/8380e195-bb32-490b-acf1-855a2774a0a6" />
+<img width="236" height="365" alt="Screenshot 2026-03-24 at 10 33 24 PM" src="https://github.com/user-attachments/assets/a70d9a27-0fb7-4bf0-970b-bee0bc1583e3" />
+<img width="976" height="869" alt="Screenshot 2026-03-24 at 10 33 33 PM" src="https://github.com/user-attachments/assets/73d72014-6df8-4772-aa32-801f6cce099e" />
+<img width="1214" height="902" alt="Screenshot 2026-03-24 at 10 33 40 PM" src="https://github.com/user-attachments/assets/bc74a3b9-327c-4afc-ae2d-f81dfedb9e8a" />
+<img width="1226" height="898" alt="Screenshot 2026-03-24 at 10 33 46 PM" src="https://github.com/user-attachments/assets/4bc7c027-a547-49bf-b623-9428a66b5f97" />
+<img width="1227" height="903" alt="Screenshot 2026-03-24 at 10 33 56 PM" src="https://github.com/user-attachments/assets/52180eb9-948f-4dda-9bec-4dafbb73ea4e" />
+<img width="1233" height="910" alt="Screenshot 2026-03-24 at 10 34 02 PM" src="https://github.com/user-attachments/assets/a502aa17-516e-44f4-b840-f0a9a9e67982" />
+<img width="747" height="893" alt="Screenshot 2026-03-24 at 10 34 25 PM" src="https://github.com/user-attachments/assets/b08b89f6-4c5f-46eb-a5f0-9823e7cbe1fb" />
+<img width="805" height="597" alt="Screenshot 2026-03-24 at 10 34 32 PM" src="https://github.com/user-attachments/assets/e5e662f6-2e2f-4897-adea-6f3ccbd349a0" />
+<img width="1259" height="464" alt="Screenshot 2026-03-24 at 10 34 56 PM" src="https://github.com/user-attachments/assets/4d524eef-bd0a-4a26-b14c-71e05a02b7b2" />
+<img width="1262" height="631" alt="Screenshot 2026-03-24 at 10 35 01 PM" src="https://github.com/user-attachments/assets/4500ce19-7a77-41cf-9a33-94571b3e9ef7" />
+<img width="728" height="211" alt="Screenshot 2026-03-24 at 10 35 24 PM" src="https://github.com/user-attachments/assets/2839252b-8ce2-4f2c-b32f-5d8c76438b2a" />
+<img width="891" height="563" alt="Screenshot 2026-03-24 at 10 35 29 PM" src="https://github.com/user-attachments/assets/45ec66d3-1aff-4534-9ff8-d2a2ff7e4e7b" />
+
 ---
 
 ## License
