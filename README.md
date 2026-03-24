@@ -1,4 +1,4 @@
-# design-system-skill
+# figma-design-system-skill
 
 A [Claude Code](https://claude.ai/code) skill that gives Claude full programmatic control over Figma — building design systems, auditing token health, migrating hardcoded values to variables, and repairing component debt — all via the Figma MCP plugin.
 
