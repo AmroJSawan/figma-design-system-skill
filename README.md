@@ -55,10 +55,16 @@ In Claude Code, run `/mcp` and enable the **Figma** remote MCP, or add it manual
   "mcpServers": {
     "figma": {
       "type": "http",
-      "url": "https://mcp.figma.com/sse"
+      "url": "https://mcp.figma.com/mcp"
     }
   }
 }
+```
+
+Or via CLI:
+
+```bash
+claude mcp add --transport http figma https://mcp.figma.com/mcp
 ```
 
 **2. Authenticate**
