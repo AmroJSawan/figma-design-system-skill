@@ -284,6 +284,13 @@ async function phase0b() {
         ? { timestamp: _lastLog.timestamp, phase: _lastLog.phase, created: _lastLog.created, failed: _lastLog.failed }
         : null,
     },
+    // Count primitive color variables that are still accessible in the design panel
+    // (scopes.length > 0 means the variable appears in fill/stroke pickers)
+    // Tier 4 — Mature requires unscopedPrimitives = 0
+    const primColl = collections.find(c => c.name === 'Color/Primitives');
+    const primVars = primColl ? vars.filter(v => v.variableCollectionId === primColl.id) : [];
+    const unscopedPrimitives = primVars.filter(v => v.scopes && v.scopes.length > 0).length;
+
     health: {
       scopedTo: figma.currentPage.name,
       maturityTier, overallScore: overallScore + '%',
@@ -296,6 +303,10 @@ async function phase0b() {
         : null,
       brokenBindings, brokenBindingsNote: brokenBindings > 0
         ? `${brokenBindings} fills reference deleted variables — counted as hardcoded; use variable.resolveForConsumer(node) to inspect alias chains`
+        : null,
+      unscopedPrimitives,
+      unscopedPrimitivesNote: unscopedPrimitives > 0
+        ? `${unscopedPrimitives} primitive color variables are accessible in the design panel picker — designers can accidentally apply them directly. Run Protocol 9 M4 step 6 (lockPrimitiveScopes) to fix. Note: _prefix on collection name only hides from publishing, NOT the panel.`
         : null,
     },
     resolvedVariableModes: figma.currentPage.resolvedVariableModes, // active collection→mode map for this page
@@ -313,6 +324,7 @@ Read the output. Answer these before proceeding:
 - What does `changelog.lastEntry` show? (Tells you the last operation run on this file — context for the current task.)
 - Are there broken bindings? (If `health.brokenBindings > 0`, fills reference deleted variables. Use `variable.resolveForConsumer(node)` on suspect nodes to inspect the full alias chain before trusting fill coverage scores.)
 - What are the `resolvedVariableModes`? (Shows which collection→mode is active for the current page — critical when building multi-mode components.)
+- Are there `unscopedPrimitives`? (If > 0, primitive color variables are still accessible in the design panel — designers can apply them directly instead of semantic tokens. Run Protocol 9 M4 step 6 after token migration is complete.)
 
 ---
 
@@ -395,6 +407,7 @@ Map the user's intent to the correct reference file and workflow:
 | "export tokens", "DTCG format", "tokens.json", "Style Dictionary export", "token pipeline" | Protocol 14 (inline below) | Phase 0b — read all variable collections |
 | "code connect", "connect to code", "map Figma to code", "inspect panel code" | Protocol 15 (inline below) | `mcp__claude_ai_Figma__get_code_connect_suggestions` |
 | "capture this page", "import from URL", "tokenize this design", "convert screenshot to tokens" | Protocol 16 (inline below) | `mcp__claude_ai_Figma__generate_figma_design` + Protocol 9 |
+| "audit doc panels", "panels look inconsistent", "component docs don't match token docs", "documentation consistency", "panel style drift" | `figma-ds-modernization.md` → Protocol 17 | Phase 0b + navigate to target page |
 | Multi-step (e.g. "build a full button system with tokens and components") | Load ALL applicable reference files | Phase 0b first, then route each sub-task |
 
 **How to load reference files:**
@@ -602,6 +615,7 @@ for (const n of [...figma.currentPage.children]) {
 | Never use | Use instead |
 |-----------|------------|
 | `figma.currentPage = page` | `await figma.setCurrentPageAsync(page)` |
+| `setTextStyleIdAsync` without checking font availability | Call `listAvailableFontsAsync()` first. At OFFICIAL tier (MCP sandbox), custom and locally-installed fonts are NOT available — only Google Fonts and system fonts appear. `loadFontAsync` also fails for missing fonts. If font is absent: skip style binding and surface warning: `text style skipped — [FontName] unavailable; requires Canvas Bridge`. |
 | `node.textStyleId = id` | `await node.setTextStyleIdAsync(id)` |
 | Inline `boundVariables` on paint | `figma.variables.setBoundVariableForPaint()` |
 | `node.paddingTopVariable = var` | `node.setBoundVariable("paddingTop", var)` |
@@ -980,6 +994,7 @@ Before declaring any task complete, verify:
 - [ ] For component health repair: detached instance inventory shown to user BEFORE any repair action
 - [ ] For layout composition: section-level frames have a 12-column layout guide; container frames have `maxWidth` bound to Layout collection variable; section spacing uses section-band tokens; molecules use component-band tokens only
 - [ ] For documentation (Protocol 13): every color swatch fill bound via `setBoundVariableForPaint`; every text sample bound via `setTextStyleIdAsync`; spacing demos use `setBoundVariable('paddingLeft')`; radius chips use `setBoundVariable('cornerRadius')`; Light/Dark mode swatches use `setExplicitVariableModeForCollection`; no hardcoded color or font values anywhere in doc panels; panels positioned in 3-column layout measured from actual frame sizes
+- [ ] Panel consistency (Protocol 17): after any panel creation or modification, run `scanPanelConsistency()` — all `Panel ·` frames must share the same fill token (`background/subtle`), radius binding (`radius/lg` on all 4 corners), and semantic text hierarchy (category→`accent/primary`, title→`text/primary`, description→`text/tertiary`). Zero tolerance for primitive fills or unbound hardcoded values on panel frames. If `inconsistentPanels.length > 0`, run `fixPanelConsistency()` before declaring done.
 - [ ] For DTCG export (Protocol 14): all variable groups exported; multi-mode variables include `$extensions.modes`; alias references serialized as `{token.path}` strings, not raw values
 - [ ] For Code Connect (Protocol 15): suggestions reviewed before mapping; all prop variants mapped; `send_code_connect_mappings` called to publish
 - [ ] For UI capture (Protocol 16): survey shown to user BEFORE bind phase; Protocol 9 health scan run before and after to confirm coverage improvement

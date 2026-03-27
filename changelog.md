@@ -1,5 +1,89 @@
 # Changelog
 
+## v1.8.1 — 2026-03-27
+
+**Protocol 17: Documentation Panel Consistency Audit — research-backed, self-enforcing.**
+
+### New capabilities
+
+**Protocol 17: Documentation Panel Consistency Audit (new)**
+- Added to `figma-ds-modernization.md` — scan + fix for `Panel ·` frame surface drift
+- Phase P1: `scanPanelConsistency()` — compares fill token, radius binding across all panels against a reference panel
+- Phase P2: `fixPanelConsistency()` — copies reference fill + radius to all divergent panels
+- Phase P3: `scanPanelTextHierarchy()` — detects primitive or unbound fills on panel text nodes
+- Canonical treatment table: `background/subtle` fill, `radius/lg` × 4 corners, `accent/primary`/`text/primary`/`text/tertiary` text hierarchy
+- Task Router row added: "audit doc panels", "panels look inconsistent", "documentation consistency", "panel style drift"
+- Quality Gate item added: `scanPanelConsistency()` mandatory after any panel modification; zero tolerance for inconsistent panels before declaring done
+
+**Research basis:**
+- Figma Blog "Documentation That Drives Adoption" — style drift causes adoption failures
+- NN/g Design Systems 101 — visual inconsistency in documentation undermines DS scale goals
+- ComponentQA, Design System Linter Pro, Design System Compliance Checker — dedicated plugins confirm this is a recognized, recurring failure pattern
+
+### Breaking changes
+- None. Purely additive.
+
+---
+
+## v1.8.0 — 2026-03-27
+
+**9 production-validated fixes — Protocol 9 hardening, semantic alias resolution, primitive scoping, font loading guard.**
+
+### Bug fixes
+
+**CRITICAL — Protocol 9 M3 COMPONENT_SET contamination**
+- Added `SKIP_TYPES = new Set(['COMPONENT_SET', 'COMPONENT'])` guard to M3 bind loop
+- Binding base/white or base/black to COMPONENT_SET/COMPONENT frames caused white/black boxes around component grids — now explicitly skipped
+- Source: Plugin API fills docs confirm no built-in type protection on `setBoundVariableForPaint`
+
+**HIGH — Phase 0b OFFICIAL tier health stub replaced with full scan**
+- `init.md` Phase 0b OFFICIAL stub (`phase0b_official()`) renamed to `phase0b_official_stub()` with prominent note directing to full `phase0b()` from SKILL.md
+- Full script runs correctly at OFFICIAL tier — all Plugin API operations available in MCP sandbox
+
+**HIGH — Protocol 9 M2 semantic alias resolution gap**
+- Added `resolveAlias()` to Shared Helpers — walks `VARIABLE_ALIAS` chains to concrete `{r,g,b,a}` values
+- M2 step 2 now explicitly requires alias resolution before color-matching; without it, all semantic tokens were invisible to M2 and only primitives could be matched
+- Preference rule added: semantic token matches take priority over primitive matches
+- Source: `resolveForConsumer` official docs — "resolved value determined using selected modes in alias chain"
+
+**HIGH — No primitive scoping enforcement after migration**
+- Added Protocol 9 M4 step 6: `lockPrimitiveScopes()` — sets `variable.scopes = []` on all primitive color variables after migration is confirmed
+- Clarification added: `_` prefix on collection name hides from library publishing only; `scopes = []` is the correct mechanism to hide from the design panel picker
+- Source: Plugin API scopes docs — "Setting this property will show/hide this variable in the variable picker UI"
+
+**HIGH — Font loading failure at OFFICIAL tier undocumented**
+- Added Critical API Rule (P0): check `listAvailableFontsAsync()` before `setTextStyleIdAsync`; custom/local fonts absent at OFFICIAL tier; surface warning and skip rather than throw
+- Source: Community-confirmed — MCP sandbox returns only Google/system fonts from `listAvailableFontsAsync`
+
+### New capabilities
+
+**Protocol 9 M0 — Page Selection Scan (new)**
+- Pre-survey scan across all pages showing hardcoded fill count per page
+- Prevents accidentally surveying token-swatch display pages (intentional primitives)
+
+**Protocol 9 M1 — Node-type breakdown in survey output**
+- Survey now returns `nodeTypes` per hex: `{ TEXT: N, FRAME: N, COMPONENT_SET: N }`
+- Enables correct semantic intent mapping in M2 (TEXT → text token; FRAME → background/border token)
+
+**Protocol 9 M3 — Batch binding pattern (replaces one-per-call rule)**
+- Replaced "one hex per `figma_execute` call" rule with batched `MAPPINGS` array pattern
+- Per-mapping try/catch preserves partial success; fallback to one-per-call for >10k node files
+
+**Protocol 9 M3.5 — Semantic Contextualization (new step)**
+- After M3 primitive bindings: audit by `(primitive name, node type)` grouping
+- Disambiguation table presented to user; `remapByContext()` applies confirmed semantic upgrades
+- Addresses: same primitive value (e.g. `neutral/400`) having different semantic intent on TEXT vs FRAME
+
+**Phase 0b — `unscopedPrimitives` metric**
+- Added `unscopedPrimitives` count + note to health return object
+- New Phase 0b reading question added
+- Protocol 8 Tier 4 — Mature now requires `unscopedPrimitives = 0`
+
+### Breaking changes
+- `phase0b_official()` in init.md renamed to `phase0b_official_stub()` with usage warning
+
+---
+
 ## v1.7.0 — 2026-03-24
 
 **13 enhancements from 6 reference files — from-scratch capability, expanded API rules, shared helpers, stroke coverage.**

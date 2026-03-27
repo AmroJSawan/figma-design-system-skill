@@ -155,8 +155,16 @@ All extracted from figma-canvas-mcp source (`/Users/macpro/figma-canvas-mcp/dist
 
 ### Phase 0b Health Scan (OFFICIAL)
 
+> **Use the full Phase 0b script from `SKILL.md` instead of this stub.** The full script
+> (`phase0b()` in SKILL.md) runs correctly via `use_figma` at OFFICIAL tier — all operations
+> (`findAll`, fill inspection, variable ID validation, `resolvedVariableModes`) are standard
+> Plugin API and available in the MCP sandbox. The stub below only exists as a fallback for
+> extremely large files (>50k nodes) where the full scan times out.
+
 ```javascript
-async function phase0b_official() {
+// FALLBACK ONLY — use full phase0b() from SKILL.md for normal files
+// This stub returns no health metrics and should only be used if the full scan times out
+async function phase0b_official_stub() {
   const pages = figma.root.children.map(p => ({ name: p.name, nodeCount: p.children.length }));
   const collections = await figma.variables.getLocalVariableCollectionsAsync();
   const vars = await figma.variables.getLocalVariablesAsync();
@@ -181,10 +189,10 @@ async function phase0b_official() {
     componentSets,
     hasVersioning: !!metaColl,
     health: null,
-    note: 'OFFICIAL tier — weighted health metrics unavailable (Canvas Bridge required)'
+    note: 'FALLBACK STUB — run full phase0b() from SKILL.md for health metrics and unscopedPrimitives'
   };
 }
-return phase0b_official();
+return phase0b_official_stub();
 ```
 
 ### Batch Create Variables (OFFICIAL equivalent of `figma_batch_create_variables`)

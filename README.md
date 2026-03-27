@@ -13,10 +13,10 @@ A [Claude Code](https://claude.ai/code) skill that gives Claude full programmati
 [![Figma Plugin API](https://img.shields.io/badge/Figma-Plugin%20API-F24E1E?logo=figma&logoColor=white&style=flat-square)](https://www.figma.com/plugin-docs/)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-CC785C?logo=anthropic&logoColor=white&style=flat-square)](https://claude.ai/code)
 
-**Version**: 1.8.0 | **Tested with**: claude-sonnet-4-6
+**Version**: 1.8.1 | **Tested with**: claude-sonnet-4-6
 
-> **New (2026-03-27) — Adaptive MCP tier detection (`init.md`)**
-> The skill now auto-detects which Figma MCP is active at the start of every session and adapts its full toolset accordingly — `CANVAS_FULL` (figma-canvas local bridge) → `OFFICIAL` (Figma remote MCP) → `REST_ONLY` → `NONE`. No configuration required. See [Get Started](#get-started) to set up either tier.
+> **New (2026-03-27) — Protocol 17: Documentation Panel Consistency Audit**
+> `scanPanelConsistency()` detects fill drift, radius drift, and text token drift across doc panels. `fixPanelConsistency()` auto-corrects and re-binds to canonical tokens. `scanPanelTextHierarchy()` enforces the 3-level text hierarchy (accent/primary → text/primary → text/tertiary). Also: `unscopedPrimitives` metric added to Phase 0b health scan; Tier 4 — Mature now requires `unscopedPrimitives = 0`. See [changelog](./changelog.md) for full details.
 
 ---
 
@@ -142,10 +142,14 @@ Claude will run Phase 0a, detect `CANVAS_FULL` tier, and start with the full too
 
 ### After installation — install reference libraries
 
-The skill routes to four external reference files for deep domain knowledge. Install whichever apply:
+The skill routes to six reference files for deep domain knowledge. Two (`figma-ds-modernization.md` and `research-layout-composition.md`) ship with this repo. The other four are separate libraries — install them from wherever you have them:
 
 ```bash
-# All four — recommended for full capability
+# Bundled files — copy from repo into skill directory (already done if you cloned)
+cp design-system-skill/figma-ds-modernization.md ~/.claude/skills/figma-ds-modernization.md
+cp design-system-skill/research-layout-composition.md ~/.claude/skills/research-layout-composition.md
+
+# External reference libraries — install separately
 cp figma-token-foundation.md ~/.claude/skills/figma-token-foundation.md
 cp research-figma-molecule-architecture.md ~/.claude/skills/research-figma-molecule-architecture.md
 cp research-responsive-adaptive-design.md ~/.claude/skills/research-responsive-adaptive-design.md
@@ -171,11 +175,12 @@ When installed, Claude automatically activates this skill whenever you ask it to
 - Apply visual harmony principles (Golden Ratio, Fibonacci spacing, Gestalt)
 
 ### Audit and modernize existing design systems
-- **Health scan**: Token coverage %, detached instance count, hardcoded color inventory — in a single Phase 0b call
-- **Maturity assessment**: Tier 1 (Fragmented) through Tier 4 (Mature) classification with a 6-R modernization roadmap
+- **Health scan**: Token coverage %, detached instance count, hardcoded color inventory, `unscopedPrimitives` count — in a single Phase 0b call
+- **Maturity assessment**: Tier 1 (Fragmented) through Tier 4 (Mature) classification with a 6-R modernization roadmap (Tier 4 requires `unscopedPrimitives = 0`)
 - **Token migration**: Strangler Fig pattern — survey hardcoded hex values by frequency, map to existing variables, bind in-place without touching nodes
 - **Deprecation cleanup**: Find all `_deprecated/` tokens, check fills AND strokes for active bindings, remap to successors, then delete safely
 - **Component repair**: Inventory detached instances, audit rogue overrides, present repair options before acting
+- **Documentation consistency**: Protocol 17 — `scanPanelConsistency()` detects fill/radius/text drift across doc panels; `fixPanelConsistency()` auto-corrects to canonical tokens; `scanPanelTextHierarchy()` enforces the 3-level text hierarchy
 
 ### Safety-first design
 Every workflow is gated by mandatory protocols that prevent data loss:
@@ -488,12 +493,13 @@ Task Router — maps intent to reference file + protocol
     ├── Components      → research-figma-molecule-architecture.md
     ├── Responsive      → research-responsive-adaptive-design.md
     ├── Visual harmony  → research-visual-harmony-composition.md
-    ├── Existing DS     → figma-ds-modernization.md (Protocols 8–11)
+    ├── Existing DS     → figma-ds-modernization.md (Protocols 8–11, 17)
     ├── Composition     → research-layout-composition.md (Protocol 12)
     ├── Documentation   → Protocol 13 (inline)
     ├── DTCG export     → Protocol 14 (inline)
     ├── Code Connect    → Protocol 15 (inline)
-    └── UI capture      → Protocol 16 (inline)
+    ├── UI capture      → Protocol 16 (inline)
+    └── Doc consistency → figma-ds-modernization.md Protocol 17
     │
     ▼
 Universal Protocols (applied to every figma_execute call)
@@ -527,6 +533,7 @@ Output report + next step suggestion
 | **Component repair** | "fix detached instances", "reattach components" |
 | **Grid propagation** | "build a section", "page template", "hero section", "card grid", "organism", "grid propagation" |
 | **Documentation** | "document design system", "document tokens", "visualize tokens", "build a style guide" |
+| **Doc consistency** | "audit doc panels", "panels look inconsistent", "documentation consistency", "fix panel drift" |
 | **DTCG export** | "export tokens", "tokens.json", "Style Dictionary export", "DTCG format" |
 | **Code Connect** | "code connect", "connect to code", "map Figma to code", "inspect panel code" |
 | **UI capture → tokenize** | "capture this page", "import from URL", "tokenize this design" |
@@ -563,7 +570,9 @@ design-system-skill/
     ├── v1.2.0.md
     ├── v1.3.0.md
     ├── v1.4.0.md
-    └── v1.7.0.md               # v1.5.0–v1.6.0 were rapid iterations; v1.7.0 is the current frozen snapshot
+    ├── v1.7.0.md               # v1.5.0–v1.6.0 were rapid iterations; v1.7.0 is a frozen snapshot
+    ├── v1.8.0.md               # Adaptive MCP tier system + 9 production-validated fixes
+    └── v1.8.1.md               # Protocol 17 documentation consistency + unscopedPrimitives metric
 
 # Companion reference file (ships with this repo):
 figma-ds-modernization.md       # Protocols 8–11 (audit, migration, deprecation, repair)
@@ -616,6 +625,7 @@ See [changelog.md](./changelog.md) for the full version history.
 
 | Version | Date | Summary |
 |---------|------|---------|
+| v1.8.1 | 2026-03-27 | Protocol 17 documentation consistency audit (`scanPanelConsistency`, `fixPanelConsistency`, `scanPanelTextHierarchy`); `unscopedPrimitives` metric in Phase 0b; Tier 4 now requires `unscopedPrimitives = 0`; `resolveAlias()` added to Shared Helpers; font loading pre-check rule in Protocol 7 |
 | v1.8.0 | 2026-03-27 | Adaptive MCP tier system: `init.md` probe cascade (CANVAS_FULL → OFFICIAL → REST_ONLY → NONE), operation dispatch table, 5 validated OFFICIAL-tier JS equivalents, SKILL.md updated for tier-aware Phase 0a, graceful degradation replaces hard stop |
 | v1.7.0 | 2026-03-24 | From-scratch capability: BrandManifest parsing, 18 new API rules, shared helper library (fv/bf/bfill/bstroke/bind*), stroke coverage in health scan, getGridValues + 2D Grid, 7 harmony principles in Quality Gate |
 | v1.6.0 | 2026-03-24 | 10 enhancements: full claude.ai Figma MCP tools, broken-binding detection, setBoundVariableForEffect, Protocols 14–16 (DTCG export, Code Connect, UI capture), superset declaration |
