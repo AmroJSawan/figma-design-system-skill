@@ -2,11 +2,151 @@
 
 A [Claude Code](https://claude.ai/code) skill that gives Claude full programmatic control over Figma — building design systems, auditing token health, migrating hardcoded values to variables, and repairing component debt — all via the Figma MCP plugin.
 
-**Version**: 1.7.0 | **Tested with**: claude-sonnet-4-6
+[![WCAG 2.1 AA](https://img.shields.io/badge/WCAG-2.1%20AA-1a7f37?logo=w3c&logoColor=white&style=flat-square)](https://www.w3.org/TR/WCAG21/)
+[![WCAG 2.2](https://img.shields.io/badge/WCAG-2.2-1a7f37?logo=w3c&logoColor=white&style=flat-square)](https://www.w3.org/TR/WCAG22/)
+[![W3C DTCG](https://img.shields.io/badge/W3C-Design%20Tokens-005A9C?logo=w3c&logoColor=white&style=flat-square)](https://tr.designtokens.org/format/)
+[![Nielsen Heuristics](https://img.shields.io/badge/Nielsen-10%20Heuristics-7B2FBE?style=flat-square)](https://www.nngroup.com/articles/ten-usability-heuristics/)
+[![Atomic Design](https://img.shields.io/badge/Atomic-Design-E05C2A?style=flat-square)](https://atomicdesign.bradfrost.com/)
+[![8pt Grid](https://img.shields.io/badge/8pt-Grid%20System-555?style=flat-square)](#spacing--4pt--8pt-grid)
+[![Gestalt](https://img.shields.io/badge/Gestalt-Principles-4A90D9?style=flat-square)](#visual-design--established-design-principles)
+[![Golden Ratio](https://img.shields.io/badge/Golden-Ratio%201%3A1.618-B8860B?style=flat-square)](#visual-design--established-design-principles)
+[![Figma Plugin API](https://img.shields.io/badge/Figma-Plugin%20API-F24E1E?logo=figma&logoColor=white&style=flat-square)](https://www.figma.com/plugin-docs/)
+[![Claude Code](https://img.shields.io/badge/Claude-Code-CC785C?logo=anthropic&logoColor=white&style=flat-square)](https://claude.ai/code)
 
-> **New (2026-03-24) — Figma Official Remote MCP with Write Support**
-> Figma has released an official remote MCP server that supports **write operations** — create frames, set fills, bind variables, update text, and more — directly from Claude without needing the local Console plugin or the figma-canvas-mcp bridge.
-> This is now the **preferred connection method** for all design write tasks. See [MCP Connection Options](#mcp-connection-options) below.
+**Version**: 1.8.0 | **Tested with**: claude-sonnet-4-6
+
+> **New (2026-03-27) — Adaptive MCP tier detection (`init.md`)**
+> The skill now auto-detects which Figma MCP is active at the start of every session and adapts its full toolset accordingly — `CANVAS_FULL` (figma-canvas local bridge) → `OFFICIAL` (Figma remote MCP) → `REST_ONLY` → `NONE`. No configuration required. See [Get Started](#get-started) to set up either tier.
+
+---
+
+## Get Started
+
+### Figma MCP comparison
+
+| | **Option A — Figma Official Remote MCP** | **Option B — figma-canvas MCP** |
+|---|---|---|
+| **Source** | Figma Inc. (remote, managed) | Open-source local bridge ([AmroJSawan/figma-canvas-mcp](https://github.com/AmroJSawan/figma-canvas-mcp)) |
+| **Setup** | OAuth only — no local server | Local Node.js server + Figma Desktop plugin |
+| **Tool count** | ~15 tools via `use_figma` JS executor | 84+ discrete tools |
+| **Write support** | Yes — frames, fills, variables, text, instances | Yes — full Plugin API surface |
+| **Granularity** | JS code blocks executed in file context | One tool per operation (batch_create_variables, lint_design, etc.) |
+| **Variable batch ops** | Via custom JS (JS equivalents in `init.md`) | `figma_batch_create_variables`, `figma_setup_design_tokens` |
+| **Lint / audit tools** | Manual JS traversal | `figma_lint_design` (WCAG contrast, touch targets, detached instances) |
+| **Screenshot / visual** | `get_screenshot` | `figma_take_screenshot` |
+| **Works offline** | No | Yes |
+| **Figma plan required** | Any (OAuth scoped to your account) | Any (plugin runs in Figma Desktop) |
+| **Active tier in skill** | `OFFICIAL` | `CANVAS_FULL` |
+
+The skill auto-detects whichever is active. Both can be registered simultaneously — `CANVAS_FULL` takes priority.
+
+---
+
+### Option A — Figma Official Remote MCP
+
+No local plugin or bridge server required. Figma's remote MCP connects directly to your account.
+
+**1. Enable the MCP in Claude Code**
+
+In Claude Code, run `/mcp` and enable the **Figma** remote MCP, or add it manually to `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/sse"
+    }
+  }
+}
+```
+
+**2. Authenticate**
+
+When Claude first calls a Figma tool, you'll be prompted to authorize with your Figma account. Complete the OAuth flow in the browser.
+
+**3. Install this skill**
+
+```bash
+git clone https://github.com/<your-username>/design-system-skill.git
+cp -r design-system-skill ~/.claude/skills/design-system-skill
+```
+
+**4. Open a Figma file and talk to Claude**
+
+```
+Audit my design system and tell me the token coverage.
+```
+
+Claude will run the Phase 0a probe, detect `OFFICIAL` tier, and start.
+
+---
+
+### Option B — figma-canvas MCP (local bridge, full tool surface)
+
+The local bridge gives access to 84+ granular Figma tools including direct variable batch operations, lint checks, and the full plugin API surface.
+
+**1. Clone and build the bridge server**
+
+```bash
+git clone https://github.com/AmroJSawan/figma-canvas-mcp.git
+cd figma-canvas-mcp
+npm install
+npm run build
+```
+
+**2. Register it in Claude Code**
+
+Add to `~/.claude/settings.json` (or `settings.local.json`):
+
+```json
+{
+  "mcpServers": {
+    "figma-canvas": {
+      "command": "node",
+      "args": ["/absolute/path/to/figma-canvas-mcp/dist/index.js"]
+    }
+  }
+}
+```
+
+**3. Install the Canvas Bridge plugin in Figma Desktop**
+
+1. Open Figma Desktop
+2. Go to **Plugins → Development → Import plugin from manifest**
+3. Select the `manifest.json` from `figma-canvas-mcp/plugin/`
+4. Run the plugin: **Plugins → Canvas Bridge** (or the name in your manifest)
+5. Confirm it shows a **Connected** status
+
+**4. Install this skill**
+
+```bash
+cp -r design-system-skill ~/.claude/skills/design-system-skill
+```
+
+**5. Open a Figma file and talk to Claude**
+
+```
+Create a token foundation for our brand — primary color #2563EB, font is Inter.
+```
+
+Claude will run Phase 0a, detect `CANVAS_FULL` tier, and start with the full toolset.
+
+---
+
+### After installation — install reference libraries
+
+The skill routes to four external reference files for deep domain knowledge. Install whichever apply:
+
+```bash
+# All four — recommended for full capability
+cp figma-token-foundation.md ~/.claude/skills/figma-token-foundation.md
+cp research-figma-molecule-architecture.md ~/.claude/skills/research-figma-molecule-architecture.md
+cp research-responsive-adaptive-design.md ~/.claude/skills/research-responsive-adaptive-design.md
+cp research-visual-harmony-composition.md ~/.claude/skills/research-visual-harmony-composition.md
+```
+
+> The skill still works without them but will warn that deep knowledge is unavailable for the missing domain.
 
 ---
 
@@ -46,7 +186,7 @@ Every workflow is gated by mandatory protocols that prevent data loss:
 
 As of **2026-03-24**, Figma provides an official remote MCP server with full **read and write** support. This supersedes the previous local Console plugin approach.
 
-### Option A — Figma Official Remote MCP (recommended)
+### Option A — Figma Official Remote MCP
 
 Figma's remote MCP connects directly to your Figma account over the network. No local plugin, no bridge server required.
 
@@ -75,7 +215,16 @@ The local Console plugin + `figma-canvas-mcp` bridge remains fully supported for
 
 ### Which option is active?
 
-The skill auto-detects the available MCP at Phase 0a. If the Figma remote MCP responds, it is used. If only `figma-canvas` is registered, the local plugin path is used. If neither is available, the skill halts with a clear error before touching anything.
+The skill runs a 3-probe cascade at Phase 0a (via `init.md`) and locks into the highest available tier:
+
+| Tier | Condition | Capability |
+|------|-----------|-----------|
+| `CANVAS_FULL` | figma-canvas MCP responds | 84+ tools, full granular API |
+| `OFFICIAL` | Figma remote MCP responds | Read + write via `use_figma` JS executor |
+| `REST_ONLY` | Only REST API token present | Read-only — no writes |
+| `NONE` | No MCP available | Skill halts with clear error |
+
+Claude announces the detected tier at the start of every session. No configuration needed — just have at least one MCP registered.
 
 ---
 
@@ -171,10 +320,9 @@ Components follow the Atomic Design methodology (Brad Frost):
 | Requirement | Notes |
 |-------------|-------|
 | [Claude Code](https://claude.ai/code) | Any plan |
-| **Figma Official Remote MCP** *(recommended)* | Released 2026-03-24 — supports read + write, no local plugin needed |
-| [Figma Desktop](https://www.figma.com/downloads/) | Required only for Option B (local Console plugin) |
-| Figma Console MCP plugin | Option B only — see installation step 3 |
-| figma-canvas MCP server | Option B only — bridges Claude ↔ Figma Console plugin |
+| **Figma Official Remote MCP** *(Option A)* | Read + write, no local plugin needed |
+| **figma-canvas MCP** *(Option B, full tool surface)* | Local bridge — [AmroJSawan/figma-canvas-mcp](https://github.com/AmroJSawan/figma-canvas-mcp) |
+| [Figma Desktop](https://www.figma.com/downloads/) | Required only for Option B (Canvas Bridge plugin) |
 
 ### Reference files (included as dependencies)
 
@@ -195,93 +343,9 @@ The first four are separate reference libraries (see [Dependencies](#dependencie
 
 ## Installation
 
-### Step 1 — Clone this repository
+See [Get Started](#get-started) for step-by-step setup for both Option A (Figma remote MCP) and Option B (figma-canvas local bridge).
 
-```bash
-git clone https://github.com/<your-username>/design-system-skill.git
-```
-
-Copy the skill directory into your Claude skills folder:
-
-```bash
-cp -r design-system-skill ~/.claude/skills/design-system-skill
-cp figma-ds-modernization.md ~/.claude/skills/figma-ds-modernization.md
-```
-
-Verify the structure:
-
-```
-~/.claude/skills/
-├── design-system-skill/
-│   ├── SKILL.md
-│   ├── README.md
-│   ├── changelog.md
-│   ├── evals/
-│   │   ├── run-evals.sh
-│   │   └── cases/
-│   │       ├── basic.md
-│   │       ├── edge-case.md
-│   │       ├── regression.md
-│   │       ├── audit-existing.md
-│   │       └── migrate-hardcoded.md
-│   └── versions/
-│       ├── v1.0.0.md
-│       ├── v1.1.0.md
-│       └── v1.2.0.md
-└── figma-ds-modernization.md
-```
-
-### Step 2 — Install the reference libraries
-
-This skill routes to four reference files for deep domain knowledge. Install whichever apply to your work:
-
-```bash
-# All four — recommended for full capability
-cp figma-token-foundation.md ~/.claude/skills/figma-token-foundation.md
-cp research-figma-molecule-architecture.md ~/.claude/skills/research-figma-molecule-architecture.md
-cp research-responsive-adaptive-design.md ~/.claude/skills/research-responsive-adaptive-design.md
-cp research-visual-harmony-composition.md ~/.claude/skills/research-visual-harmony-composition.md
-```
-
-> The skill still works without them but will warn that deep knowledge is unavailable for the missing domain.
-
-### Step 3 — Set up the Figma Console MCP plugin
-
-The skill talks to Figma through a local MCP server that bridges Claude ↔ Figma Desktop.
-
-**3a. Install the figma-canvas MCP server**
-
-```bash
-git clone https://github.com/sonnylazuardi/figma-canvas-mcp.git
-cd figma-canvas-mcp
-npm install
-npm run build
-```
-
-**3b. Register it in Claude Code**
-
-Add the server to `~/.claude/settings.json` (or `settings.local.json`):
-
-```json
-{
-  "mcpServers": {
-    "figma-canvas": {
-      "command": "node",
-      "args": ["/absolute/path/to/figma-canvas-mcp/dist/index.js"]
-    }
-  }
-}
-```
-
-**3c. Install the Console plugin in Figma Desktop**
-
-1. Open Figma Desktop
-2. Go to **Plugins → Development → Import plugin from manifest**
-3. Select the `manifest.json` from the `figma-canvas-mcp` plugin directory
-4. Run the plugin: **Plugins → figma-console** (or the name in your manifest)
-5. Confirm it shows a **Connected** status
-
-### Step 4 — Verify everything is wired up
+### Verify everything is wired up
 
 Run the eval suite to check that all reference files are in place:
 
@@ -397,7 +461,11 @@ Claude will:
 User message
     │
     ▼
-Phase 0a — MCP health check (stop if disconnected)
+Phase 0a — MCP tier detection (init.md probe cascade)
+    │         Probe 1: figma_get_status     → CANVAS_FULL
+    │         Probe 2: mcp__figma__whoami   → OFFICIAL
+    │         Probe 3: figma_get_file_data  → REST_ONLY
+    │         None respond                  → NONE (halt)
     │
     ▼
 Phase 0b — File state audit + health scan
@@ -466,6 +534,10 @@ design-system-skill/
 ├── SKILL.md                    # Main skill — Phases 0a/0b, Brand Input,
 │                               # Task Router, Protocols 1–7, 12–16,
 │                               # Shared Helpers, Quality Gate, Edge Cases
+│
+├── init.md                     # MCP tier detection + operation dispatch table
+│                               # Phase 0a probe cascade (CANVAS_FULL → OFFICIAL →
+│                               # REST_ONLY → NONE), JS equivalents for OFFICIAL tier
 │
 ├── README.md                   # This file
 ├── changelog.md                # Version history with full diffs
@@ -538,6 +610,7 @@ See [changelog.md](./changelog.md) for the full version history.
 
 | Version | Date | Summary |
 |---------|------|---------|
+| v1.8.0 | 2026-03-27 | Adaptive MCP tier system: `init.md` probe cascade (CANVAS_FULL → OFFICIAL → REST_ONLY → NONE), operation dispatch table, 5 validated OFFICIAL-tier JS equivalents, SKILL.md updated for tier-aware Phase 0a, graceful degradation replaces hard stop |
 | v1.7.0 | 2026-03-24 | From-scratch capability: BrandManifest parsing, 18 new API rules, shared helper library (fv/bf/bfill/bstroke/bind*), stroke coverage in health scan, getGridValues + 2D Grid, 7 harmony principles in Quality Gate |
 | v1.6.0 | 2026-03-24 | 10 enhancements: full claude.ai Figma MCP tools, broken-binding detection, setBoundVariableForEffect, Protocols 14–16 (DTCG export, Code Connect, UI capture), superset declaration |
 | v1.5.0 | 2026-03-24 | Protocol 13: live-bound documentation panels, namespace fix, Quality Gate update |
@@ -550,6 +623,17 @@ See [changelog.md](./changelog.md) for the full version history.
 ---
 
 ## Troubleshooting
+
+**Phase 0a reports `ACTIVE_TIER = NONE`**
+No Figma MCP is reachable. Check that at least one is registered and active:
+- Option A: confirm the Figma remote MCP is enabled in Claude Code (`/mcp`) and you've completed OAuth
+- Option B: confirm the figma-canvas MCP server is running and the Canvas Bridge plugin shows **Connected** in Figma Desktop
+
+**Phase 0a detected `OFFICIAL` but write operations fail**
+Your Figma OAuth token may have expired. Re-authenticate: in Claude Code run `/mcp`, disconnect and reconnect the Figma MCP, then complete the OAuth flow again. If Phase 0a shows `REST_ONLY`, that also indicates an expired or missing write token.
+
+**"Canvas Bridge plugin is not connected" (Option B)**
+Open Figma Desktop → Plugins → run the Canvas Bridge plugin → confirm it shows Connected → retry. If you have multiple Figma files open, make sure the plugin is running in the active file.
 
 **"Figma Console plugin is not connected"**
 Open Figma Desktop → Plugins → run the Console plugin → confirm it shows Connected → retry.
